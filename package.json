@@ -1,0 +1,35 @@
+{
+  "name": "web-differences",
+  "version": "1.0.0",
+  "description": "Compare two websites and find the differences using Cucumber",
+  "main": "index.js",
+  "dependencies": {
+    "@cucumber/cucumber": "^8.5.1",
+    "commander": "^9.4.0",
+    "dotenv": "^16.0.2",
+    "js-yaml": "^4.1.0",
+    "jsonfile": "^6.1.0",
+    "pixelmatch": "^5.3.0",
+    "pngjs": "^6.0.0",
+    "selenium-webdriver": "^4.4.0"
+  },
+  "devDependencies": {
+    "@percy/cli": "^1.10.0",
+    "@percy/selenium-webdriver": "^1.0.2",
+    "chai": "^4.3.6",
+    "chromedriver": "^104.0.0"
+  },
+  "scripts": {
+    "run": "./imgdiff.sh"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/joschavz/web-differences.git"
+  },
+  "author": "Jose Chavez",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/joschavz/web-differences/issues"
+  },
+  "homepage": "https://github.com/joschavz/web-differences#readme"
+}
