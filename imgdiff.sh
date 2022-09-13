@@ -17,7 +17,7 @@ read -p "Do you want to delete the directory? (y/n) " -r
 
 if [[ $REPLY =~ ^[Yy]$ ]]
 then
-  rm -rf "visual-testing/images/"
+  rm -rf "images/"
 fi
 
 clear

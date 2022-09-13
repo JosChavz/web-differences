@@ -104,7 +104,9 @@ class Driver {
     }
 
     async getLinks(blacklistPaths, blacklistChildrenPaths) {
-        const links = await this.driver.findElements(webdriver.By.tagName('a'));
+        await this.delay(1000);
+        const links = await this.driver.findElements({tagName: 'a'});
+
         const hrefs = [];
         for (let link of links) {
             let href = await link.getAttribute('href');
@@ -147,49 +149,6 @@ class Driver {
             return hrefs.indexOf(href) === index;
         });
     }
-
-    /**
-     * @description - Goes through the URLs and takes a screenshot of the page,
-     * then saves it to the cache folder
-     * @param {array} urls - The URLs to take screenshots of given from the URL.csv file
-     * @param {string} cacheFolderPath - The path to the cache folder to store the images
-     */
-    // async takeScreenshots(urls, cacheFolderPath) {
-    //     let i, height;
-    //     i = height = 0;
-    //
-    //     for (let url of urls) {
-    //         await this.driver.get(url);
-    //
-    //         // Get the height of the rendered page
-    //         height = await this.driver.executeScript('return document.body.parentNode.scrollHeight');
-    //         console.log(height);
-    //
-    //         await this.driver.wait(async () => {
-    //             return await this.driver.executeScript('return document.readyState').then(function(readyState) {
-    //                 return readyState === 'complete';
-    //             });
-    //         })
-    //             .then(async () => {
-    //                 let _y = 0;
-    //
-    //                 // Scroll and screenshot until the entire page is captured
-    //                 while (_y < height) {
-    //                     await this.driver.executeScript('window.scrollTo(0, ' + _y + ')');
-    //                     await this.delay(1000);
-    //                     // Takes a screenshot then saves it into the cache folder
-    //                     await this.driver.takeScreenshot()
-    //                         .then((data) => {
-    //                                 fs.writeFileSync(path.join(cacheFolderPath, `image_${i++}.png`), data, 'base64');
-    //                             }
-    //                         );
-    //                     _y += await this.driver.manage().window().getRect().then((rect) => {
-    //                         return rect.height;
-    //                     });
-    //                 }
-    //             });
-    //     }
-    // }
 
     /**
      * @description - Compares the screenshots in the cache folder to the screenshots in the

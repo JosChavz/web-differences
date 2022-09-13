@@ -54,6 +54,16 @@ let currentLink = 0;
     await driversInitialize(destinationDriver, yaml_doc.destination);
 
     do {
+        // Take screenshot of the current page
+        const originURL = new URL(pathTaken[currentLink++]);
+        const changedURL = originURL.href.replace(originURL.host, DESTINATION_BASE_URL.host);
+        const destinationURL = new URL(changedURL);
+
+        const originImagePath = await originDriver.takeScreenshot(originURL, 'origin');
+        const destImagePath = await destinationDriver.takeScreenshot(destinationURL, 'dest');
+
+        await originDriver.compareScreenshots(originImagePath, destImagePath);
+
         // Get all links
         const originLinks = await originDriver.getLinks(yaml_doc.blacklistSinglePaths,
             yaml_doc.blacklistChildrenPaths);
@@ -66,19 +76,6 @@ let currentLink = 0;
 
         // Merge the two arrays
         pathTaken = [...new Set([...pathTaken,...originLinks])]
-
-        // Take screenshot of the current page
-        const originURL = new URL(pathTaken[currentLink]);
-        const changedURL = originURL.href.replace(originURL.host, DESTINATION_BASE_URL.host);
-        const destinationURL = new URL(changedURL);
-
-        const originImagePath = await originDriver.takeScreenshot(originURL, 'origin');
-        const destImagePath = await destinationDriver.takeScreenshot(destinationURL, 'dest');
-
-        await originDriver.compareScreenshots(originImagePath, destImagePath);
-
-        // Go to the next link
-        await originDriver.driver.get(pathTaken[currentLink++]);
 
         // Simple console logs
         console.log("Size of pathTaken: " + pathTaken.length);

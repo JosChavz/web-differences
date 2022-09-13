@@ -108,6 +108,8 @@ dist
 # "Cache" folder
 visual-testing/images
 visual-testing/diff
+diff/
+images/
 
 # JSON File
 visual-testing/cookies.json
