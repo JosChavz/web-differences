@@ -16,7 +16,7 @@ program
     .version('1.0.0')
     .name('imgdiff')
     .usage('[options]')
-    .option('-C, --cookie', "The cookie to set for the browser given the cookies.json file.")
+    .option('--depth', "The depth to crawl the site to")
     .parse(process.argv);
 
 const options = program.opts();
@@ -46,19 +46,35 @@ let baseDestinationURL = '';
  **********************************************************************************************/
 const originDriver = new Driver("origin", ORIGIN_BASE_URL);
 const destinationDriver = new Driver("dest", DESTINATION_BASE_URL);
-let pathTaken = [ORIGIN_BASE_URL];
-let currentLink = 0;
+let queue = [];
+let depthArray = [];
+queue.push(yaml_doc.origin);
+let visited = new Set();
+let depthVisited = 0;
 
 (async () => {
     await driversInitialize(originDriver, yaml_doc.origin);
     await driversInitialize(destinationDriver, yaml_doc.destination);
 
     do {
-        // Take screenshot of the current page
-        const originURL = new URL(pathTaken[currentLink++]);
+        const currentLink = queue.shift();
+
+        const originURL = new URL(currentLink);
         const changedURL = originURL.href.replace(originURL.host, DESTINATION_BASE_URL.host);
         const destinationURL = new URL(changedURL);
 
+        // Visit the link
+        const actualLink = await originDriver.visit(currentLink);
+        await destinationDriver.visit(destinationURL);
+
+        // Test to see if the link exists in the visited set
+        if (visited.has(actualLink)) {
+            decrementDepth();
+            console.log("Actual link: " + actualLink + ", Current Link: " + currentLink);
+            continue;
+        }
+
+        // Take screenshot of the current page
         const originImagePath = await originDriver.takeScreenshot(originURL, 'origin');
         const destImagePath = await destinationDriver.takeScreenshot(destinationURL, 'dest');
 
@@ -71,20 +87,23 @@ let currentLink = 0;
         // Go through all the links
         originLinks.filter((link) => {
             // Returns if the link is not in the pathTaken array
-            return !pathTaken.includes(link);
+            return !queue.includes(link);
         });
 
         // Merge the two arrays
-        pathTaken = [...new Set([...pathTaken,...originLinks])]
+        queue = [...new Set([...queue,...originLinks])]
 
         // Simple console logs
-        console.log("Size of pathTaken: " + pathTaken.length);
-        console.log("Current link: " + pathTaken[currentLink - 1]);
-        console.log("Next link " + pathTaken[currentLink]);
-    } while (currentLink < pathTaken.length);
+        console.log("Size of queue: " + queue.length);
+        //console.log("Current link: " + queue[currentLink - 1]);
+        console.log("Next link " + queue[0]);
+
+        // Add to visited set
+        visited.add(actualLink);
+        decrementDepth();
+    } while (queue.length > 0 || depthVisited < yaml_doc.depth);
 
     await originDriver.closeDriver();
-    await destinationDriver.closeDriver();
 })();
 
 /***********************************************************************************************
@@ -95,6 +114,17 @@ async function driversInitialize(driver, url) {
     await driver.initDriver();
     // Adds cookie(s) to the browser
     if (yaml_doc.cookies) {
+        console.log("Adding cookies to the browser");
         await driver.setCookie(yaml_doc.cookies, url);
+    }
+}
+
+function decrementDepth() {
+    if (depthArray.length > 0) {
+        depthArray[0] -= 1;
+        if (depthArray[0] === 0) {
+            depthArray.shift();
+            depthVisited += 1;
+        }
     }
 }
