@@ -162,7 +162,7 @@ class Driver {
      */
     compareScreenshots(cacheFolderPath, destinationFolderPath) {
         this.clearCache('diff');
-        const cacheFolderRename = cacheFolderPath.replace('cache', '').replaceAll('/', '_');
+        const cacheFolderRename = cacheFolderPath.replace('cache', '').replace(/\//g, '_');
 
         const cacheFolderContents = fs.readdirSync(cacheFolderPath);
         const destinationFolderContents = fs.readdirSync(destinationFolderPath);
