@@ -55,6 +55,11 @@ class Driver {
         }
     }
 
+    async visit(url) {
+        await this.driver.get(url);
+        return this.driver.getCurrentUrl();
+    }
+
     /**
      * @description - Takes a screenshot of the passed URL and stores it in the designated directory
      * also depending on the passed URL given the pathname into a directory
@@ -73,8 +78,6 @@ class Driver {
         if (!fs.existsSync(cacheFolderPath)) {
             fs.mkdirSync(cacheFolderPath, {recursive: true});
         }
-
-        await this.driver.get(url);
 
         // Get the height of the rendered page
         height = await this.driver.executeScript('return document.body.parentNode.scrollHeight');
@@ -104,29 +107,25 @@ class Driver {
     }
 
     async getLinks(blacklistPaths, blacklistChildrenPaths) {
-        await this.delay(1000);
-        const links = await this.driver.findElements({tagName: 'a'});
-
+        const links = await this.driver.findElements(webdriver.By.tagName('a'));
         const hrefs = [];
         for (let link of links) {
             let href = await link.getAttribute('href');
-            
+
             // If the link is not null and is not a mailto link, then add it to the array
             if (href) {
                 // Strips off the query, hash, and search params
                 href = href.split('?')[0].split('#')[0];
 
                 const tempURL = new URL(href);
-                
-
                 // And it is a relative URL
                 // Also if the link is not a link to the same page
-                if (tempURL.hostname === this.url.hostname && 
+                if (tempURL.hostname === this.url.hostname &&
                     tempURL.pathname !== this.url.pathname &&
                     !blacklistPaths.includes(tempURL.pathname)) {
 
                     let isChild = false;
-                    
+
                     blacklistChildrenPaths.forEach((path) => {
                         const pathname = tempURL.pathname;
 
@@ -138,6 +137,11 @@ class Driver {
                     });
 
                     if (!isChild) {
+                        // Checks to see if contains a / at the end
+                        if (href[href.length - 1] !== '/') {
+                            href += '/';
+                        }
+
                         hrefs.push(href);
                     }
                 }
@@ -158,6 +162,7 @@ class Driver {
      */
     compareScreenshots(cacheFolderPath, destinationFolderPath) {
         this.clearCache('diff');
+        const cacheFolderRename = cacheFolderPath.replace('cache', '').replaceAll('/', '_');
 
         const cacheFolderContents = fs.readdirSync(cacheFolderPath);
         const destinationFolderContents = fs.readdirSync(destinationFolderPath);
@@ -170,7 +175,7 @@ class Driver {
                 const diff = new PNG({width, height});
                 const numDiffPixels = pixelmatch(img1.data, img2.data, diff.data, width, height, {threshold: 0.85});
                 if (numDiffPixels > 0) {
-                    fs.writeFileSync(path.join('diff', file), PNG.sync.write(diff));
+                    fs.writeFileSync(path.join('diff', `${cacheFolderRename}${file}`), PNG.sync.write(diff));
                 }
             }
         }
