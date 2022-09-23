@@ -18,10 +18,19 @@ class Driver {
      * @description - Initializes the webdriver
      */
     async initDriver() {
+			//Headless
+			const options = new chrome.Options();
+			options.addArguments('--headless');
+			options.addArguments('--disable-gpu');
+			options.addArguments('--window-size=1920,1080');
+			options.addArguments('--no-sandbox');
+
         this.driver = await new webdriver.Builder()
             .forBrowser('chrome')
+						.setChromeOptions(options)
             .build();
         await this.driver.manage().window().maximize();
+
     }
 
     /**
@@ -121,6 +130,7 @@ class Driver {
             if (href) {
                 // Strips off the query, hash, and search params
                 href = href.split('?')[0].split('#')[0];
+								href.replace('/www.', '/');
 
                 const tempURL = new URL(href);
 
