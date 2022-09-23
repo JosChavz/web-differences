@@ -3,7 +3,7 @@
 # subdomain.domain.com
 origin: 'https://www.origin.com/'
 destination: 'https://www.destination.com/'
-cookie:
+cookies:
   - name: "name"
     value: "value"
 blacklistSinglePaths:

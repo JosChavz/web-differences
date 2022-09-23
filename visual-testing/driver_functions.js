@@ -4,6 +4,7 @@ const fs = require("fs");
 const path = require("path");
 const pixelmatch = require('pixelmatch');
 const {Options} = require("selenium-webdriver/lib/webdriver");
+const { By } = require("selenium-webdriver");
 const PNG = require('pngjs').PNG;
 
 class Driver {
@@ -107,7 +108,11 @@ class Driver {
     }
 
     async getLinks(blacklistPaths, blacklistChildrenPaths) {
-        const links = await this.driver.findElements(webdriver.By.tagName('a'));
+				// If the main URL has 'www', then remove it
+				const tempURLString = this.url.href.replace('/www.', '/');
+				const tempBaseURL = new URL(tempURLString);
+
+        const links = await this.driver.findElements(By.css('a'));
         const hrefs = [];
         for (let link of links) {
             let href = await link.getAttribute('href');
@@ -118,10 +123,11 @@ class Driver {
                 href = href.split('?')[0].split('#')[0];
 
                 const tempURL = new URL(href);
+
                 // And it is a relative URL
                 // Also if the link is not a link to the same page
-                if (tempURL.hostname === this.url.hostname &&
-                    tempURL.pathname !== this.url.pathname &&
+                if (tempURL.hostname === tempBaseURL.hostname &&
+                    tempURL.pathname !== tempBaseURL.pathname &&
                     !blacklistPaths.includes(tempURL.pathname)) {
 
                     let isChild = false;
@@ -160,7 +166,7 @@ class Driver {
      * @param {string} cacheFolderPath - The path to the cache folder to store the images
      * @param {string} destinationFolderPath - The path to the destination folder to store the images
      */
-    compareScreenshots(cacheFolderPath, destinationFolderPath) {
+    async compareScreenshots(cacheFolderPath, destinationFolderPath, shouldDelete) {
         this.clearCache('diff');
         const cacheFolderRename = cacheFolderPath.replace('cache', '').replace(/\//g, '_');
 
@@ -179,6 +185,11 @@ class Driver {
                 }
             }
         }
+
+				if (shouldDelete) {
+					this.clearCache('../origin');
+					this.clearCache('../dest');
+				}
     }
 
     /**
@@ -193,6 +204,11 @@ class Driver {
     delay(time) {
         return new Promise(resolve => setTimeout(resolve, time));
     }
+
+		unzip (file) {
+			const zip = new AdmZip(file);
+			zip.extractAllTo('../images/origin', true);
+		}
 }
 
 module.exports = Driver;

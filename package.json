@@ -5,6 +5,7 @@
   "main": "index.js",
   "dependencies": {
     "@cucumber/cucumber": "^8.5.1",
+    "adm-zip": "^0.5.9",
     "commander": "^9.4.0",
     "dotenv": "^16.0.2",
     "js-yaml": "^4.1.0",

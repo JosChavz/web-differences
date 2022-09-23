@@ -17,15 +17,16 @@ program
     .name('imgdiff')
     .usage('[options]')
     .option('--depth', "The depth to crawl the site to")
+		.option('-t, --temp', "Temporarily saves the images; Used to prevent bloat")
+		.option('-p, --prev <file>', "Uses the previous images from the specified folder zip file")
     .parse(process.argv);
 
 const options = program.opts();
 
-// // If no options are given, show the help
-// if (Object.keys(options).length === 0) {
-//     program.help();
-//     process.exit(0);
-// }
+// Set temp to be true if previous is specified
+if (options.prev) {
+	options.temp = true;
+}
 
 // Loading up the YAML file
 try {
@@ -36,10 +37,33 @@ try {
     process.exit(1);
 }
 
+// Validates the URL for both dest and origin
+const originValidates = validateLink(yaml_doc.origin);
+const destValidates = validateLink(yaml_doc.dest);
+
+if (!originValidates || !destValidates) {
+	console.log("Invalid URL. Please make sure to have a valid URL including the protocol. Closing...");
+	process.exit(1);
+}
+
+// Constants
 const ORIGIN_BASE_URL = new URL(yaml_doc.origin);
 const DESTINATION_BASE_URL = new URL(yaml_doc.destination);
-const cacheFolderPath = path.join(__dirname, 'images');
-let baseDestinationURL = '';
+
+// Checks to see if the previous zip file exists
+if (options.prev) {
+	if (!fs.existsSync(options.prev)) {
+		console.log("The previous zip file does not exist. Closing...");
+		process.exit(1);
+	} else {
+		const tempDriver = new Driver();
+		// Clears the origin cache folder
+		tempDriver.clearCache('../images/origin');
+		// Unzips the previous zip file
+		tempDriver.unzip(options.prev);
+	}
+}
+
 
 /***********************************************************************************************
  * SEQUENCE
@@ -78,7 +102,7 @@ let depthVisited = 0;
         const originImagePath = await originDriver.takeScreenshot(originURL, 'origin');
         const destImagePath = await destinationDriver.takeScreenshot(destinationURL, 'dest');
 
-        await originDriver.compareScreenshots(originImagePath, destImagePath);
+        await originDriver.compareScreenshots(originImagePath, destImagePath, options.temp);
 
         // Get all links
         const originLinks = await originDriver.getLinks(yaml_doc.blacklistSinglePaths,
@@ -95,15 +119,18 @@ let depthVisited = 0;
 
         // Simple console logs
         console.log("Size of queue: " + queue.length);
-        //console.log("Current link: " + queue[currentLink - 1]);
         console.log("Next link " + queue[0]);
 
-        // Add to visited set
+        // Add to visited set [both the actual link and the current link]
+				// Where the current link refers to the link that was taken from the
+				// page
         visited.add(actualLink);
+				visited.add(currentLink);
         decrementDepth();
     } while (queue.length > 0 || depthVisited < yaml_doc.depth);
 
     await originDriver.closeDriver();
+		await destinationDriver.closeDriver();
 })();
 
 /***********************************************************************************************
@@ -127,4 +154,9 @@ function decrementDepth() {
             depthVisited += 1;
         }
     }
+}
+
+function validateLink(link) {
+	const regex = new RegExp('^(http|https)\://[a-zA-Z0-9\-\.]+\.[a-zA-Z]{2,3}(:[a-zA-Z0-9]*)?/?([a-zA-Z0-9\-\._\?\,\'/\\\+&amp;%\$#\=~])*[^\.\,\)\(\s]$');
+	return regex.test(link);
 }
