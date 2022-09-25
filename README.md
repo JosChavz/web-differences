@@ -1,5 +1,5 @@
 # Web Differences
-Mainly used for testing the website after doing plugin updates.
+Mainly used for WordPress sites to test after a plugin update. Currently working by having a dev/staging site and production site.
 
 ## Installation
 
