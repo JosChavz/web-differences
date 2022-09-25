@@ -9,9 +9,11 @@ const PNG = require('pngjs').PNG;
 
 class Driver {
     constructor(pathToImages, url) {
-        this.pathToImages = pathToImages;
-        this.driver = null;
-        this.url = new URL(url);
+			// Clears the diff folder
+			this.clearCache('diff');
+			this.pathToImages = pathToImages;
+			this.driver = null;
+			this.url = new URL(url);
     }
 
     /**
@@ -130,7 +132,12 @@ class Driver {
             if (href) {
                 // Strips off the query, hash, and search params
                 href = href.split('?')[0].split('#')[0];
-								href.replace('/www.', '/');
+								href = href.replace('/www.', '/');
+
+								// Adds '/' to the end of the URL if it doesn't have it
+								if (href[href.length - 1] !== '/') {
+									href += '/';
+								}
 
                 const tempURL = new URL(href);
 
@@ -177,8 +184,7 @@ class Driver {
      * @param {string} destinationFolderPath - The path to the destination folder to store the images
      */
     async compareScreenshots(cacheFolderPath, destinationFolderPath, shouldDelete) {
-        this.clearCache('diff');
-        const cacheFolderRename = cacheFolderPath.replace('cache', '').replace(/\//g, '_');
+        const cacheFolderRename = cacheFolderPath.replace('images', '').replace(/\//g, '_');
 
         const cacheFolderContents = fs.readdirSync(cacheFolderPath);
         const destinationFolderContents = fs.readdirSync(destinationFolderPath);
@@ -197,8 +203,8 @@ class Driver {
         }
 
 				if (shouldDelete) {
-					this.clearCache('../origin');
-					this.clearCache('../dest');
+					fs.rmdirSync(cacheFolderPath, {recursive: true});
+					fs.rmdirSync(destinationFolderPath, {recursive: true});
 				}
     }
 

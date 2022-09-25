@@ -30,16 +30,18 @@ if (options.prev) {
 
 // Loading up the YAML file
 try {
-    yaml_doc = yaml.load(fs.readFileSync(path.join(__dirname, 'config.yml'), 'utf8'));
-    console.log(yaml_doc);
+	console.log(path.join(__dirname, 'config.yml'));
+	yaml_doc = yaml.load(fs.readFileSync(path.join(__dirname, 'config.yml'), 'utf8'));
+	console.log(yaml_doc);
 } catch (e) {
-    console.log("Unable to read the YAML file. Closing...");
-    process.exit(1);
+	console.log("Unable to read the YAML file. Closing...");
+	console.log(e);
+	process.exit(1);
 }
 
 // Validates the URL for both dest and origin
 const originValidates = validateLink(yaml_doc.origin);
-const destValidates = validateLink(yaml_doc.dest);
+const destValidates = validateLink(yaml_doc.destination);
 
 if (!originValidates || !destValidates) {
 	console.log("Invalid URL. Please make sure to have a valid URL including the protocol. Closing...");
@@ -110,8 +112,8 @@ let depthVisited = 0;
 
         // Go through all the links
         originLinks.filter((link) => {
-            // Returns if the link is not in the pathTaken array
-            return !queue.includes(link);
+            // Returns if the link has not already been visited
+            return !visited.has(link) || !queue.includes(link);
         });
 
         // Merge the two arrays
@@ -157,6 +159,7 @@ function decrementDepth() {
 }
 
 function validateLink(link) {
+	console.log("Validating link: " + link);
 	const regex = new RegExp('^(http|https)\://[a-zA-Z0-9\-\.]+\.[a-zA-Z]{2,3}(:[a-zA-Z0-9]*)?/?([a-zA-Z0-9\-\._\?\,\'/\\\+&amp;%\$#\=~])*[^\.\,\)\(\s]$');
 	return regex.test(link);
 }
