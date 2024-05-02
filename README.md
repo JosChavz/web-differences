@@ -1,5 +1,6 @@
 # Web Differences
-Mainly used for WordPress sites to test after a plugin update. Currently working by having a dev/staging site and production site.
+
+Mainly used for WordPress sites to test after a plugin update. Currently working by having a dev/staging site and production site. The program will take screenshots of the pages and compare them to see if there are any differences. If there are differences, the program will output the differences in the "diff" folder.
 
 ## Installation
 
@@ -7,8 +8,18 @@ Mainly used for WordPress sites to test after a plugin update. Currently working
 npm install
 ```
 
+## Getting Started
+
+After installing all the required packages,
+please copy the "config.yml.temp" file to "config.yml" in the same directory. 
+Set the origin and destination of the pages.
+Ensure to have the HTTP protocol in the URL, plus the subdomain and domain.
+*(e.g. http://subdomain.domain.com)*
+
+
 ## Usage
-`./imgdiff.sh`
+
+[TODO: Add the usage of the program]
 
 ## Visual Testing
 Visual Testing is a program that iterates through the links in "URL.csv" and compares the screenshots of the links to 
@@ -40,5 +51,34 @@ file as, in respect, `blacklistSinglePaths` or `blacklistChildrenPaths`.
 
 ***Please follow the syntax of config.yml***
 
-#### Options
-*None, but coming soon...*
+## Logging
+
+There will be a log to ensure that the program is running correctly. The log will be in the "logs" folder. The log will also be printed out on the console.
+
+## Architecture
+
+There are three essential files:
+- Auditor.ts
+- Navigator.ts
+- Photographer.ts
+
+These files will be run in the `main.ts` file. The main file is only responsible for
+parsing the YAML configuration file and running the Navigator class.
+
+### Auditor.ts
+
+The Auditor class is responsible for comparing the screenshots of the origin and destination. It will be reporting the differences, whether they pass or fail. The Auditor class will be using the *"pixelmatch"* library to compare the images.
+
+[TODO: An elaborate page where the Auditor reports the differences]
+
+### Navigator.ts
+
+The Navigator class is responsible for navigating through the pages, it is truly the main file among these other files. It will be using the *"selenium-webdriver"* library to navigate through the pages.
+
+After navigating to another page, it will call the Photographer class to take a screenshot of the page. Then, it will call the Auditor class to compare the screenshots.
+
+### Photographer.ts
+
+The Photographer class is responsible for taking the screenshots of the pages. It will be using the *"selenium-webdriver"* library to take the screenshots.
+
+[FUTURE: The Photographer class will be able to take full screenshots of the page in different resolutions. This is to ensure that all devices are covered.]
