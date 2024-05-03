@@ -28,14 +28,13 @@ export class Crawler {
     this.queue.push(this.initialURL);
     do {
       const currentURL: URL = this.queue.shift() as URL;
-      const visitedURL = await this.driver.visitURL(currentURL);
+      const visitedURL: URL = await this.driver.visitURL(currentURL);
 
-      this.visited.add(currentURL);
+      this.logger.info(
+        `Has visited? ${this.visited.has(visitedURL)} URL: ${visitedURL} - ${currentURL} ${this.visited.has(currentURL)}`
+      );
 
-      // First checks if the destination URL is already visited
-      // Adds the origin URL to the visited set - to avoid revisiting
-      if (this.visited.has(visitedURL)) {
-        this.visited.add(visitedURL);
+      if (this.visited.has(visitedURL) || this.visited.has(currentURL)) {
         this.logger.info(
           `The destination URL ${visitedURL} has already been visited. URL from Stack: ${currentURL}\n Skipping...`
         );
@@ -43,6 +42,8 @@ export class Crawler {
       }
 
       // Unique URLs section
+      this.visited.add(currentURL);
+      this.visited.add(visitedURL);
       pagesToNavigate.push(currentURL);
 
       const links: URL[] = await this.driver.getAllLinks();

@@ -94,21 +94,38 @@ export class WebDriver {
     });
   }
 
-  async getAllLinks(): Promise<URL[]> {
-    this.logger.info('Getting all the links on the page');
-
-    const anchorElements: WebElement[] = await this.driver.findElements(
-      By.css('a')
+  async getAllLinks(maxTries: number = 5): Promise<URL[]> {
+    this.logger.info(
+      this.logMessage(`Getting all the links on the page - try ${maxTries}`)
     );
-    return Promise.all(
-      anchorElements.map(async anchorElement => {
-        const href = await anchorElement.getAttribute('href');
-        if (!href) {
-          return null;
-        }
-        return new URL(href);
-      })
-    ).then(links => links.filter(link => link !== null) as URL[]);
+
+    let links: URL[] = [];
+
+    try {
+      const anchorElements: WebElement[] = await this.driver.findElements(
+        By.css('a')
+      );
+
+      links = await Promise.all(
+        anchorElements.map(async anchorElement => {
+          const href = await anchorElement.getAttribute('href');
+          if (!href) {
+            return null;
+          }
+          return new URL(href);
+        })
+      ).then(links => links.filter(link => link !== null) as URL[]);
+    } catch (e) {
+      this.logger.error(this.logMessage(`Error getting the links: ${e}`));
+      if (maxTries > 0) {
+        this.logger.info(
+          this.logMessage(`Retrying to get the links - ${maxTries} left`)
+        );
+        links = await this.getAllLinks(maxTries - 1);
+      }
+    }
+
+    return links;
   }
 
   private logMessage(message: string) {
