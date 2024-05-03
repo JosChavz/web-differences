@@ -3,7 +3,8 @@ import fs from 'fs-extra';
 import path from 'path';
 import winston from 'winston';
 import { Navigator } from './Navigator';
-
+import { Crawler } from './Crawler';
+import { validateLink } from './utils';
 // Initially creates a logger with two transports: Console and File
 const logger = winston.createLogger({
   transports: [
@@ -27,20 +28,24 @@ try {
   process.exit(1);
 }
 
-try {
-  // Validates the URL for both dest and origin
-  validateLink(yaml_doc.origin);
-  validateLink(yaml_doc.destination);
-} catch (e) {
-  logger.error(`Error validating the URL: ${e}`);
-  process.exit(1);
+const validOrigin = validateLink(yaml_doc.origin);
+const validDestination = validateLink(yaml_doc.destination);
+if (!validOrigin || !validDestination) {
+  logger.error('Invalid URL');
+  throw new Error('Invalid URL');
 }
 
 // Main function
 async function main(): Promise<void> {
   logger.info('Starting the main function');
-  const navigator: Navigator = new Navigator(yaml_doc);
-  await navigator.run();
+
+  const crawler: Crawler = new Crawler(new URL(yaml_doc.origin));
+  const pagesToNavigate: URL[] = await crawler.crawl();
+
+  await fs.outputFile('crawled.txt', pagesToNavigate.join('\n'));
+
+  // const navigator: Navigator = new Navigator(yaml_doc);
+  // await navigator.run();
 }
 
 main()
@@ -50,18 +55,3 @@ main()
   .catch(e => {
     logger.error(`Error in the main function: ${e}`);
   });
-
-/***********************************************************************************************
- * FUNCTIONS
- **********************************************************************************************/
-
-function validateLink(link: string): void {
-  logger.info('Validating link: ' + link);
-  const regex = new RegExp(
-    "^(http|https)://[a-zA-Z0-9-.]+.[a-zA-Z]{2,3}(:[a-zA-Z0-9]*)?/?([a-zA-Z0-9-._?,'/\\+&amp;%$#=~])*[^.,)(s]$"
-  );
-  const valid = regex.test(link);
-  if (!valid) throw new Error(`Invalid URL ${link}`);
-
-  return;
-}
