@@ -8,6 +8,11 @@ Mainly used for WordPress sites to test after a plugin update. Currently working
 npm install
 ```
 
+### Requirements
+- Node.js : v20
+- Chrome Browser: v124
+
+
 ## Getting Started
 
 After installing all the required packages,
@@ -62,9 +67,19 @@ There are three essential files:
 - Auditor.ts
 - Navigator.ts
 - Photographer.ts
+- Crawler.ts
 
 These files will be run in the `main.ts` file. The main file is only responsible for
 parsing the YAML configuration file and running the Navigator class.
+
+### Crawler.ts
+As the name implies, the Crawler will crawl through the pages of the website. 
+It will be using the *"selenium-webdriver"* library to crawl through. 
+The Crawler will be responsible for finding all the URLs of the website to then pass it into the
+Navigator class.
+
+**NOTE**: This will be very beneficial in the future when there is a caching system in place
+and when multi-threading is implemented.
 
 ### Auditor.ts
 
@@ -87,3 +102,14 @@ After navigating to another page, it will call the Photographer class to take a 
 The Photographer class is responsible for taking the screenshots of the pages. It will be using the *"selenium-webdriver"* library to take the screenshots.
 
 [FUTURE: The Photographer class will be able to take full screenshots of the page in different resolutions. This is to ensure that all devices are covered.]
+
+## Future Implementations
+
+- [ ] Implement a caching system to reduce the time of the program
+- [ ] Implement multi-threading to increase the speed of the program
+- [ ] Implement a full screenshot of the page for different dimensions
+- [ ] Implement a visual report of the differences
+- [ ] Leverage off Docker to run the program with the respected Chrome version
+- [ ] Create different Docker containers for other browsers
+
+

@@ -7,17 +7,17 @@ import chrome from 'selenium-webdriver/chrome';
 import winston, { Logger } from 'winston';
 
 export class Navigator {
-  readonly roadmap: Config;
+  readonly config: Config;
   readonly ORIGIN_BASE_URL: string;
   readonly DESTINATION_BASE_URL: string;
   queue: URL[] = [];
   visited: Set<URL> = new Set();
   readonly logger: Logger;
 
-  constructor(roadmap: Config) {
-    this.roadmap = roadmap;
-    this.ORIGIN_BASE_URL = roadmap.origin;
-    this.DESTINATION_BASE_URL = roadmap.destination;
+  constructor(configParams: Config) {
+    this.config = configParams;
+    this.ORIGIN_BASE_URL = configParams.origin;
+    this.DESTINATION_BASE_URL = configParams.destination;
     this.logger = winston.createLogger({
       transports: [
         new winston.transports.Console(),
