@@ -16,6 +16,8 @@ const logger = winston.createLogger({
 export interface Config {
   origin: string;
   destination: string;
+  blacklistSinglePaths: string[];
+  blacklistChildrenPaths: string[];
 }
 
 // Reads the configuration file
@@ -31,15 +33,18 @@ try {
 const validOrigin = validateLink(yaml_doc.origin);
 const validDestination = validateLink(yaml_doc.destination);
 if (!validOrigin || !validDestination) {
-  logger.error('Invalid URL');
-  throw new Error('Invalid URL');
+  logger.error('Invalid URL in YAML');
+  throw new Error('Invalid URL in YAML');
 }
 
 // Main function
 async function main(): Promise<void> {
   logger.info('Starting the main function');
 
-  const crawler: Crawler = new Crawler(new URL(yaml_doc.origin));
+  const crawler: Crawler = new Crawler(new URL(yaml_doc.origin), {
+    singlePaths: yaml_doc.blacklistSinglePaths,
+    childrenPaths: yaml_doc.blacklistChildrenPaths,
+  });
   const pagesToNavigate: URL[] = await crawler.crawl();
 
   await fs.outputFile('crawled.txt', pagesToNavigate.join('\n'));

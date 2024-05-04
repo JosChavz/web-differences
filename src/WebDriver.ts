@@ -109,7 +109,7 @@ export class WebDriver {
       links = await Promise.all(
         anchorElements.map(async anchorElement => {
           const href = await anchorElement.getAttribute('href');
-          if (!href) {
+          if (!href || !validateLink(href)) {
             return null;
           }
           return new URL(href);
