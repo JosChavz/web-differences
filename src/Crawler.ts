@@ -57,10 +57,6 @@ export class Crawler {
       currentURL.search = '';
       currentURL.hash = '';
 
-      const worker: Worker = new Worker('crawl_worker.js', {
-        workerData: currentURL,
-      });
-
       const visitedURL: URL = await this.driver.visitURL(currentURL);
 
       this.logger.info(

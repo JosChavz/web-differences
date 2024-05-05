@@ -2,16 +2,16 @@ import { Config } from './main';
 import { URL } from 'url';
 import fs from 'fs-extra';
 import path from 'path';
-import webdriver, { By, WebDriver } from 'selenium-webdriver';
 import chrome from 'selenium-webdriver/chrome';
 import winston, { Logger } from 'winston';
+import { Browser, WebDriver } from './WebDriver';
+import { Photographer } from './Photographer';
 
 export class Navigator {
   readonly config: Config;
   readonly ORIGIN_BASE_URL: string;
   readonly DESTINATION_BASE_URL: string;
   queue: URL[] = [];
-  visited: Set<URL> = new Set();
   readonly logger: Logger;
 
   constructor(configParams: Config) {
@@ -28,8 +28,17 @@ export class Navigator {
   }
 
   async run() {
-    const originDriver: WebDriver = await this.initializeWebDriver();
-    const destinationDriver: WebDriver = await this.initializeWebDriver();
+    const originDriver: WebDriver = new WebDriver(Browser.CHROME);
+    const destinationDriver: WebDriver = new WebDriver(Browser.CHROME);
+
+    const originPhotographer: Photographer = new Photographer(
+      originDriver,
+      'origin'
+    );
+    const destinationPhotographer: Photographer = new Photographer(
+      destinationDriver,
+      'destination'
+    );
 
     do {
       // The two URLs to compare
@@ -41,65 +50,21 @@ export class Navigator {
         )
       );
 
-      // Visits the origin URL
-      const currentOriginVisitedURL: URL = await this.visitURL(
-        originDriver,
-        currentOriginURL
-      );
+      await originDriver.visitURL(currentOriginURL, {
+        fullHeight: true,
+      });
+      await destinationDriver.visitURL(currentDestinationURL, {
+        fullHeight: true,
+      });
 
-      // First checks if the destination URL is already visited
-      // Adds the origin URL to the visited set - to avoid revisiting
-      if (this.visited.has(currentOriginVisitedURL)) {
-        this.visited.add(currentOriginURL);
-        this.logger.info(
-          `The destination URL ${currentOriginVisitedURL} has already been visited. URL from Stack: ${currentOriginURL}\n Skipping...`
-        );
-        continue;
-      }
-
-      // Visits the destination URL
-      const currentDestinationVisitedURL = await this.visitURL(
-        destinationDriver,
-        currentDestinationURL
-      );
+      // Takes a full screenshot
+      const originScreenshotPath: string =
+        await originPhotographer.takeFullScreenshot();
+      const destinationScreenshotPath: string =
+        await destinationPhotographer.takeFullScreenshot();
     } while (this.queue.length > 0);
 
-    await this.closeDriver(originDriver);
-  }
-
-  async initializeWebDriver(): Promise<WebDriver> {
-    // Creates the Selenium WebDriver
-    const options = new chrome.Options();
-    options.addArguments('--headless');
-    options.addArguments('--disable-gpu');
-    options.addArguments('--window-size=1920,1080');
-    options.addArguments('--no-sandbox');
-    const driver = await new webdriver.Builder()
-      .forBrowser('chrome')
-      .setChromeOptions(options)
-      .build();
-
-    await driver.manage().window().maximize();
-
-    return driver;
-  }
-
-  async closeDriver(driver: WebDriver) {
-    if (driver) {
-      await driver.quit();
-    }
-  }
-
-  /**
-   * Visits the URL and returns the current URL
-   * Note that the returned URL may be different from the input URL
-   * if a redirect occurs
-   * @param driver - The WebDriver
-   * @param url - The URL to visit
-   * @returns The current URL after visiting the input URL
-   */
-  async visitURL(driver: WebDriver, url: URL): Promise<URL> {
-    await driver.get(url.href);
-    return new URL(driver.getCurrentUrl());
+    await originDriver.close();
+    await destinationDriver.close();
   }
 }

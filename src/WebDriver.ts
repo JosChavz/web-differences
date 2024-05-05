@@ -16,6 +16,12 @@ export enum Browser {
   FIREFOX = 'FIREFOX',
 }
 
+export enum DEVICE_WIDTH {
+  DESKTOP = 1920,
+  TABLET = 768,
+  MOBILE = 375,
+}
+
 export class WebDriver {
   readonly logger: winston.Logger;
   readonly driver: ThenableWebDriver;
@@ -72,10 +78,32 @@ export class WebDriver {
 
     return tempDriver;
   }
-  async visitURL(url: URL) {
+
+  async visitURL(
+    url: URL,
+    options?: {
+      fullHeight: boolean;
+      width?: DEVICE_WIDTH;
+    }
+  ) {
     this.logger.info(`Visiting the URL: ${url.toString()}`);
 
     await this.driver.get(url.toString());
+
+    if (options?.fullHeight) {
+      const totalHeight: number = await this.driver.executeScript(
+        'return document.body.parentNode.scrollHeight'
+      );
+
+      await this.driver
+        .manage()
+        .window()
+        .setRect({
+          width: options.width || DEVICE_WIDTH.DESKTOP,
+          height: totalHeight,
+        });
+    }
+
     await this.waitForLoad();
 
     const currentURL: string = await this.driver.getCurrentUrl();
@@ -128,8 +156,27 @@ export class WebDriver {
     return links;
   }
 
+  async takeFullScreenshot(directoryPath: string): Promise<string> {
+    this.logger.info(this.logMessage('Taking a full screenshot'));
+
+    const screenshotPath: string = path.join(
+      directoryPath,
+      `${Date.now()}.png`
+    );
+
+    await this.driver.takeScreenshot().then(data => {
+      fs.outputFile(screenshotPath, data, 'base64');
+    });
+
+    return screenshotPath;
+  }
+
   private logMessage(message: string) {
     return `${this.FILENAME} - ${message}`;
+  }
+
+  delay(time: number) {
+    return new Promise(resolve => setTimeout(resolve, time));
   }
 
   async close() {

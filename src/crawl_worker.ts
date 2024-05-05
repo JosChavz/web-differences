@@ -16,10 +16,17 @@ async function crawlUrl(url: URL) {
 
 crawlUrl(urlToCrawl)
   .then(result => {
+    if (parentPort === null) {
+      throw new Error('Parent port is not available');
+    }
+
     // Send the result back to the main thread
     parentPort.postMessage(result);
   })
   .catch(err => {
+    if (parentPort === null) {
+      throw new Error('Parent port is not available');
+    }
     // If an error occurred, send the error message back to the main thread
     parentPort.postMessage({ error: err.message });
   })

@@ -23,6 +23,9 @@ export interface Config {
 // Reads the configuration file
 let yaml_doc: Config;
 
+// Reads the crawled pages from the cache
+let pagesToNavigate: URL[] = [];
+
 try {
   yaml_doc = yaml.load(fs.readFileSync('config.yml', 'utf8')) as Config;
 } catch (e) {
@@ -37,20 +40,43 @@ if (!validOrigin || !validDestination) {
   throw new Error('Invalid URL in YAML');
 }
 
+try {
+  const originURL: URL = new URL(yaml_doc.origin);
+
+  pagesToNavigate = JSON.parse(
+    fs.readFileSync(`cache/${originURL.hostname}_crawled.json`, 'utf8')
+  ) as URL[];
+} catch (e) {
+  logger.info(`Error reading the cache: ${e}`);
+}
+
 // Main function
 async function main(): Promise<void> {
   logger.info('Starting the main function');
 
-  const crawler: Crawler = new Crawler(new URL(yaml_doc.origin), {
-    singlePaths: yaml_doc.blacklistSinglePaths,
-    childrenPaths: yaml_doc.blacklistChildrenPaths,
-  });
-  const pagesToNavigate: URL[] = await crawler.crawl();
+  if (pagesToNavigate.length === 0) {
+    const originURL: URL = new URL(yaml_doc.origin);
 
-  await fs.outputFile('crawled.txt', pagesToNavigate.join('\n'));
+    const crawler: Crawler = new Crawler(originURL, {
+      singlePaths: yaml_doc.blacklistSinglePaths,
+      childrenPaths: yaml_doc.blacklistChildrenPaths,
+    });
+    const pagesToNavigate: URL[] = await crawler.crawl();
 
-  // const navigator: Navigator = new Navigator(yaml_doc);
-  // await navigator.run();
+    logger.info('Crawling finished! Adding it to cache...');
+
+    await fs.outputFile(
+      `cache/${originURL.hostname}_crawled.json`,
+      JSON.stringify(pagesToNavigate, null, 2)
+    );
+  } else {
+    logger.info(
+      `Using the ${new URL(yaml_doc.origin).hostname}_crawled.json for the crawled pages`
+    );
+  }
+
+  const navigator: Navigator = new Navigator(yaml_doc);
+  await navigator.run();
 }
 
 main()
