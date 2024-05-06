@@ -6,6 +6,7 @@ import chrome from 'selenium-webdriver/chrome';
 import winston, { Logger } from 'winston';
 import { Browser, WebDriver } from './WebDriver';
 import { Photographer } from './Photographer';
+import {Auditor} from "./Auditor";
 
 export class Navigator {
   readonly config: Config;
@@ -14,7 +15,7 @@ export class Navigator {
   queue: URL[] = [];
   readonly logger: Logger;
 
-  constructor(configParams: Config) {
+  constructor(configParams: Config, pageQueue: URL[] = []) {
     this.config = configParams;
     this.ORIGIN_BASE_URL = configParams.origin;
     this.DESTINATION_BASE_URL = configParams.destination;
@@ -24,7 +25,7 @@ export class Navigator {
         new winston.transports.File({ filename: 'logs/navigator.log' }),
       ],
     });
-    this.queue.push(new URL(this.ORIGIN_BASE_URL));
+    this.queue.push(...pageQueue);
   }
 
   async run() {
@@ -39,6 +40,8 @@ export class Navigator {
       destinationDriver,
       'destination'
     );
+
+    const auditor: Auditor = new Auditor();
 
     do {
       // The two URLs to compare
@@ -62,6 +65,20 @@ export class Navigator {
         await originPhotographer.takeFullScreenshot();
       const destinationScreenshotPath: string =
         await destinationPhotographer.takeFullScreenshot();
+
+      try {
+        // Compare the two screenshots
+        await auditor.compareImages(
+          originScreenshotPath,
+          destinationScreenshotPath
+        );
+      } catch (e) {
+        this.logger.error(`Error comparing images for URL ${currentOriginURL}: ${e}`);
+      } finally {
+        // Remove the screenshots
+        fs.removeSync(originScreenshotPath);
+        fs.removeSync(destinationScreenshotPath);
+      }
     } while (this.queue.length > 0);
 
     await originDriver.close();

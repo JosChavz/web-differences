@@ -164,8 +164,9 @@ export class WebDriver {
       `${Date.now()}.png`
     );
 
-    await this.driver.takeScreenshot().then(data => {
-      fs.outputFile(screenshotPath, data, 'base64');
+    await this.driver.takeScreenshot().then(async (data: string) => {
+      await fs.outputFile(screenshotPath, data, 'base64');
+      this.logger.info(this.logMessage(`Screenshot saved at: ${screenshotPath}`));
     });
 
     return screenshotPath;
@@ -173,10 +174,6 @@ export class WebDriver {
 
   private logMessage(message: string) {
     return `${this.FILENAME} - ${message}`;
-  }
-
-  delay(time: number) {
-    return new Promise(resolve => setTimeout(resolve, time));
   }
 
   async close() {

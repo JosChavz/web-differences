@@ -43,11 +43,27 @@ if (!validOrigin || !validDestination) {
 try {
   const originURL: URL = new URL(yaml_doc.origin);
 
-  pagesToNavigate = JSON.parse(
+   const tempURLs: string[]= JSON.parse(
     fs.readFileSync(`cache/${originURL.hostname}_crawled.json`, 'utf8')
-  ) as URL[];
+  );
+
+  pagesToNavigate = tempURLs.map((url: string) => new URL(url));
 } catch (e) {
   logger.info(`Error reading the cache: ${e}`);
+}
+
+// Creates the folders if not made
+if (!fs.existsSync('images/destination')) {
+  fs.mkdirSync('images/destination', { recursive: true });
+}
+if (!fs.existsSync('images/origin')) {
+  fs.mkdirSync('images/origin', { recursive: true });
+}
+if (!fs.existsSync('images/diff')) {
+  fs.mkdirSync('images/diff', { recursive: true });
+}
+if (!fs.existsSync('cache')) {
+  fs.mkdirSync('cache', { recursive: true });
 }
 
 // Main function
@@ -61,7 +77,7 @@ async function main(): Promise<void> {
       singlePaths: yaml_doc.blacklistSinglePaths,
       childrenPaths: yaml_doc.blacklistChildrenPaths,
     });
-    const pagesToNavigate: URL[] = await crawler.crawl();
+    pagesToNavigate = await crawler.crawl();
 
     logger.info('Crawling finished! Adding it to cache...');
 
@@ -75,7 +91,7 @@ async function main(): Promise<void> {
     );
   }
 
-  const navigator: Navigator = new Navigator(yaml_doc);
+  const navigator: Navigator = new Navigator(yaml_doc, pagesToNavigate);
   await navigator.run();
 }
 
