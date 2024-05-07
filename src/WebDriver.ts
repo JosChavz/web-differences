@@ -68,9 +68,11 @@ export class WebDriver {
         break;
       case Browser.CHROME:
         chromeOptions.addArguments('--headless');
-        chromeOptions.addArguments('--disable-gpu');
         chromeOptions.addArguments('--window-size=1920,1080');
         chromeOptions.addArguments('--no-sandbox');
+        chromeOptions.addArguments('--disable-gpu');
+        chromeOptions.addArguments('--disable-extensions');
+        chromeOptions.addArguments('--disable-popup-blocking');
 
         tempDriver = new webdriver.Builder()
           .forBrowser(webdriver.Browser.CHROME)
