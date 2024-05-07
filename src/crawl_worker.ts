@@ -6,7 +6,7 @@ import { Browser, WebDriver } from './WebDriver';
 const urlToCrawl = workerData;
 
 // Create a new WebDriver instance
-const driver = new WebDriver(Browser.CHROME);
+const driver = new WebDriver(Browser.CHROME, []);
 
 async function crawlUrl(url: URL) {
   // TODO: Replace this with your actual crawling logic

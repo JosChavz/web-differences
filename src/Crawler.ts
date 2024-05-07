@@ -1,6 +1,6 @@
 import { URL } from 'url';
 import winston, { Logger } from 'winston';
-import { Browser, WebDriver } from './WebDriver';
+import { Browser, Cookies, WebDriver } from './WebDriver';
 
 export interface Blacklist {
   singlePaths: string[];
@@ -16,7 +16,7 @@ export class Crawler {
   readonly singlePathBlacklist: Set<string> = new Set();
   readonly childrenPathBlacklist: string[];
 
-  constructor(initURL: URL, blacklist: Blacklist) {
+  constructor(initURL: URL, blacklist: Blacklist, cookies: Cookies[]) {
     this.initialURL = initURL;
     this.queue = [];
     this.visited = new Set();
@@ -38,7 +38,7 @@ export class Crawler {
       ],
     });
 
-    this.driver = new WebDriver(Browser.CHROME);
+    this.driver = new WebDriver(Browser.CHROME, cookies);
   }
 
   async crawl(): Promise<URL[]> {

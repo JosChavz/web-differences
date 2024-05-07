@@ -22,12 +22,17 @@ export enum DEVICE_WIDTH {
   MOBILE = 375,
 }
 
+export interface Cookies {
+  name: string;
+  value: string;
+}
+
 export class WebDriver {
   readonly logger: winston.Logger;
   readonly driver: ThenableWebDriver;
   readonly FILENAME: string = path.basename(__filename);
 
-  constructor(browserType: Browser) {
+  constructor(browserType: Browser, cookies: Cookies[]) {
     this.logger = winston.createLogger({
       transports: [
         new winston.transports.Console(),
@@ -35,14 +40,17 @@ export class WebDriver {
       ],
     });
 
-    const tempDriver = this.initializeWebDriver(browserType);
+    const tempDriver = this.initializeWebDriver(browserType, cookies);
     if (!tempDriver) {
       throw new Error('Driver is not initialized');
     }
     this.driver = tempDriver;
   }
 
-  initializeWebDriver(browserType: Browser): ThenableWebDriver | undefined {
+  initializeWebDriver(
+    browserType: Browser,
+    cookies: Cookies[]
+  ): ThenableWebDriver | undefined {
     this.logger.info('Initializing the WebDriver');
 
     // Temporary driver
@@ -75,6 +83,10 @@ export class WebDriver {
       default:
         throw new Error('Unsupported browser type');
     }
+
+    this.setCookies(cookies).then(() => {
+      this.logger.info('Cookies set');
+    });
 
     return tempDriver;
   }
@@ -166,10 +178,22 @@ export class WebDriver {
 
     await this.driver.takeScreenshot().then(async (data: string) => {
       await fs.outputFile(screenshotPath, data, 'base64');
-      this.logger.info(this.logMessage(`Screenshot saved at: ${screenshotPath}`));
+      this.logger.info(
+        this.logMessage(`Screenshot saved at: ${screenshotPath}`)
+      );
     });
 
     return screenshotPath;
+  }
+
+  async setCookies(cookies: { name: string; value: string }[]): Promise<void> {
+    this.logger.info(this.logMessage('Setting cookies'));
+
+    await Promise.all(
+      cookies.map(async cookie => {
+        await this.driver.manage().addCookie(cookie);
+      })
+    );
   }
 
   private logMessage(message: string) {

@@ -5,6 +5,7 @@ import winston from 'winston';
 import { Navigator } from './Navigator';
 import { Crawler } from './Crawler';
 import { validateLink } from './utils';
+import { Cookies } from './WebDriver';
 // Initially creates a logger with two transports: Console and File
 const logger = winston.createLogger({
   transports: [
@@ -16,6 +17,7 @@ const logger = winston.createLogger({
 export interface Config {
   origin: string;
   destination: string;
+  cookies: Cookies[];
   blacklistSinglePaths: string[];
   blacklistChildrenPaths: string[];
 }
@@ -25,6 +27,9 @@ let yaml_doc: Config;
 
 // Reads the crawled pages from the cache
 let pagesToNavigate: URL[] = [];
+
+// Reads the cookies
+const cookies: Cookies[] = [];
 
 try {
   yaml_doc = yaml.load(fs.readFileSync('config.yml', 'utf8')) as Config;
@@ -43,7 +48,7 @@ if (!validOrigin || !validDestination) {
 try {
   const originURL: URL = new URL(yaml_doc.origin);
 
-   const tempURLs: string[]= JSON.parse(
+  const tempURLs: string[] = JSON.parse(
     fs.readFileSync(`cache/${originURL.hostname}_crawled.json`, 'utf8')
   );
 
@@ -66,6 +71,13 @@ if (!fs.existsSync('cache')) {
   fs.mkdirSync('cache', { recursive: true });
 }
 
+// Reads the cookies from the YAML file
+if (yaml_doc.cookies) {
+  yaml_doc.cookies.forEach(cookie => {
+    cookies.push(cookie);
+  });
+}
+
 // Main function
 async function main(): Promise<void> {
   logger.info('Starting the main function');
@@ -73,10 +85,14 @@ async function main(): Promise<void> {
   if (pagesToNavigate.length === 0) {
     const originURL: URL = new URL(yaml_doc.origin);
 
-    const crawler: Crawler = new Crawler(originURL, {
-      singlePaths: yaml_doc.blacklistSinglePaths,
-      childrenPaths: yaml_doc.blacklistChildrenPaths,
-    });
+    const crawler: Crawler = new Crawler(
+      originURL,
+      {
+        singlePaths: yaml_doc.blacklistSinglePaths,
+        childrenPaths: yaml_doc.blacklistChildrenPaths,
+      },
+      cookies
+    );
     pagesToNavigate = await crawler.crawl();
 
     logger.info('Crawling finished! Adding it to cache...');

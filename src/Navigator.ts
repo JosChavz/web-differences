@@ -4,9 +4,9 @@ import fs from 'fs-extra';
 import path from 'path';
 import chrome from 'selenium-webdriver/chrome';
 import winston, { Logger } from 'winston';
-import { Browser, WebDriver } from './WebDriver';
+import { Browser, Cookies, WebDriver } from './WebDriver';
 import { Photographer } from './Photographer';
-import {Auditor} from "./Auditor";
+import { Auditor } from './Auditor';
 
 export class Navigator {
   readonly config: Config;
@@ -14,6 +14,7 @@ export class Navigator {
   readonly DESTINATION_BASE_URL: string;
   queue: URL[] = [];
   readonly logger: Logger;
+  readonly cookies: Cookies[];
 
   constructor(configParams: Config, pageQueue: URL[] = []) {
     this.config = configParams;
@@ -26,11 +27,15 @@ export class Navigator {
       ],
     });
     this.queue.push(...pageQueue);
+    this.cookies = configParams.cookies;
   }
 
   async run() {
-    const originDriver: WebDriver = new WebDriver(Browser.CHROME);
-    const destinationDriver: WebDriver = new WebDriver(Browser.CHROME);
+    const originDriver: WebDriver = new WebDriver(Browser.CHROME, this.cookies);
+    const destinationDriver: WebDriver = new WebDriver(
+      Browser.CHROME,
+      this.cookies
+    );
 
     const originPhotographer: Photographer = new Photographer(
       originDriver,
@@ -73,7 +78,9 @@ export class Navigator {
           destinationScreenshotPath
         );
       } catch (e) {
-        this.logger.error(`Error comparing images for URL ${currentOriginURL}: ${e}`);
+        this.logger.error(
+          `Error comparing images for URL ${currentOriginURL}: ${e}`
+        );
       } finally {
         // Remove the screenshots
         fs.removeSync(originScreenshotPath);
