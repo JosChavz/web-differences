@@ -31,6 +31,8 @@ export class WebDriver {
   readonly logger: winston.Logger;
   readonly driver: ThenableWebDriver;
   readonly FILENAME: string = path.basename(__filename);
+  readonly cookies: Cookies[];
+  cookiesInitialized: boolean = false;
 
   constructor(browserType: Browser, cookies: Cookies[]) {
     this.logger = winston.createLogger({
@@ -39,18 +41,16 @@ export class WebDriver {
         new winston.transports.File({ filename: 'logs/webdriver.log' }),
       ],
     });
+    this.cookies = cookies;
 
-    const tempDriver = this.initializeWebDriver(browserType, cookies);
+    const tempDriver = this.initializeWebDriver(browserType);
     if (!tempDriver) {
       throw new Error('Driver is not initialized');
     }
     this.driver = tempDriver;
   }
 
-  initializeWebDriver(
-    browserType: Browser,
-    cookies: Cookies[]
-  ): ThenableWebDriver | undefined {
+  initializeWebDriver(browserType: Browser): ThenableWebDriver | undefined {
     this.logger.info('Initializing the WebDriver');
 
     // Temporary driver
@@ -84,10 +84,6 @@ export class WebDriver {
         throw new Error('Unsupported browser type');
     }
 
-    this.setCookies(cookies).then(() => {
-      this.logger.info('Cookies set');
-    });
-
     return tempDriver;
   }
 
@@ -101,6 +97,15 @@ export class WebDriver {
     this.logger.info(`Visiting the URL: ${url.toString()}`);
 
     await this.driver.get(url.toString());
+
+    if (!this.cookiesInitialized) {
+      this.logger.info('Setting the cookies for the first time!');
+      await this.setCookies(this.cookies);
+      this.cookiesInitialized = true;
+
+      // Refresh the page to apply the cookies
+      await this.driver.navigate().refresh();
+    }
 
     if (options?.fullHeight) {
       const totalHeight: number = await this.driver.executeScript(

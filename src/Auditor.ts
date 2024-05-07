@@ -17,7 +17,7 @@ export class Auditor {
     });
   }
 
-  async compareImages(origin: string, destination: string) {
+  async compareImages(origin: string, destination: string): Promise<boolean> {
     // Read the images
     let originImage = PNG.sync.read(fs.readFileSync(origin));
     let destinationImage = PNG.sync.read(fs.readFileSync(destination));
@@ -73,6 +73,10 @@ export class Auditor {
           fs.writeFileSync(diffPath, data);
           this.logger.info(`Diff image saved at: ${diffPath}`);
         });
+
+      return false;
     }
+
+    return true;
   }
 }
