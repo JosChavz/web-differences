@@ -48,6 +48,10 @@ export class WebDriver {
       throw new Error('Driver is not initialized');
     }
     this.driver = tempDriver;
+
+    if (!this.driver) {
+      throw new Error('Driver is not initialized');
+    }
   }
 
   initializeWebDriver(browserType: Browser): ThenableWebDriver | undefined {
@@ -85,6 +89,10 @@ export class WebDriver {
       default:
         throw new Error('Unsupported browser type');
     }
+
+    tempDriver?.manage().setTimeouts({
+      implicit: 100000,
+    });
 
     return tempDriver;
   }

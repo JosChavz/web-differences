@@ -6,6 +6,11 @@ import { Browser, Cookies, WebDriver } from './WebDriver';
 import { Photographer } from './Photographer';
 import { Auditor } from './Auditor';
 
+export interface Result {
+  diffCount: number;
+  errorURLs: string[];
+}
+
 export class Navigator {
   readonly config: Config;
   readonly ORIGIN_BASE_URL: string;
@@ -14,6 +19,7 @@ export class Navigator {
   readonly logger: Logger;
   readonly cookies: Cookies[];
   diffCount: number = 0;
+  errorURLs: string[] = [];
 
   constructor(configParams: Config, pageQueue: URL[] = []) {
     this.config = configParams;
@@ -25,11 +31,12 @@ export class Navigator {
         new winston.transports.File({ filename: 'logs/navigator.log' }),
       ],
     });
+
     this.queue.push(...pageQueue);
     this.cookies = configParams.cookies;
   }
 
-  async run() {
+  async run(): Promise<Result> {
     const originDriver: WebDriver = new WebDriver(Browser.CHROME, this.cookies);
     const destinationDriver: WebDriver = new WebDriver(
       Browser.CHROME,
@@ -57,12 +64,19 @@ export class Navigator {
         )
       );
 
-      await originDriver.visitURL(currentOriginURL, {
-        fullHeight: true,
-      });
-      await destinationDriver.visitURL(currentDestinationURL, {
-        fullHeight: true,
-      });
+      // Visit the URLs
+      try {
+        await originDriver.visitURL(currentOriginURL, {
+          fullHeight: true,
+        });
+        await destinationDriver.visitURL(currentDestinationURL, {
+          fullHeight: true,
+        });
+      } catch (e) {
+        this.logger.error(`Error visiting URL: ${e}`);
+        this.errorURLs.push(currentOriginURL.toString());
+        continue;
+      }
 
       // Takes a full screenshot
       const originScreenshotPath: string =
@@ -82,6 +96,7 @@ export class Navigator {
           this.logger.error(
             `Error comparing images for URL ${currentOriginURL}: ${e}`
           );
+          this.errorURLs.push(currentOriginURL.toString());
         })
         .finally(() => {
           fs.remove(originScreenshotPath);
@@ -95,5 +110,10 @@ export class Navigator {
 
     await originDriver.close();
     await destinationDriver.close();
+
+    return {
+      diffCount: this.diffCount,
+      errorURLs: this.errorURLs,
+    };
   }
 }

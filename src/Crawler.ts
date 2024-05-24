@@ -41,7 +41,7 @@ export class Crawler {
     this.driver = new WebDriver(Browser.CHROME, cookies);
   }
 
-  async crawl(): Promise<URL[]> {
+  async crawl(): Promise<string[]> {
     const pagesToNavigate: string[] = [];
     const initialURL: URL = this.initialURL;
 
@@ -99,7 +99,7 @@ export class Crawler {
 
     await this.driver.close();
 
-    return pagesToNavigate.map(page => new URL(page));
+    return pagesToNavigate;
   }
 
   private async filterLinks(links: URL[]): Promise<string[]> {

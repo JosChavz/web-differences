@@ -6,6 +6,7 @@ import { Navigator } from './Navigator';
 import { Crawler } from './Crawler';
 import { validateLink } from './utils';
 import { Cookies } from './WebDriver';
+import { Worker, isMainThread, parentPort, workerData } from 'worker_threads';
 // Initially creates a logger with two transports: Console and File
 const logger = winston.createLogger({
   transports: [
@@ -26,10 +27,13 @@ export interface Config {
 let yaml_doc: Config;
 
 // Reads the crawled pages from the cache
-let pagesToNavigate: URL[] = [];
+let pagesToNavigate: string[] = [];
 
 // Reads the cookies
 const cookies: Cookies[] = [];
+
+// Amount of cores to use
+const CORES: number = 8;
 
 try {
   yaml_doc = yaml.load(fs.readFileSync('config.yml', 'utf8')) as Config;
@@ -48,11 +52,9 @@ if (!validOrigin || !validDestination) {
 try {
   const originURL: URL = new URL(yaml_doc.origin);
 
-  const tempURLs: string[] = JSON.parse(
+  pagesToNavigate = JSON.parse(
     fs.readFileSync(`cache/${originURL.hostname}_crawled.json`, 'utf8')
   );
-
-  pagesToNavigate = tempURLs.map((url: string) => new URL(url));
 } catch (e) {
   logger.info(`Error reading the cache: ${e}`);
 }
@@ -107,8 +109,53 @@ async function main(): Promise<void> {
     );
   }
 
-  const navigator: Navigator = new Navigator(yaml_doc, pagesToNavigate);
-  await navigator.run();
+  // TODO: Split the pagesToNavigate array into chunks
+  const chunkSize: number = Math.ceil(pagesToNavigate.length / CORES);
+  const pageChunks: Array<string[]> = new Array<string[]>(chunkSize);
+
+  let start: number = 0;
+  for (let i = 1; i <= CORES; i++) {
+    if (i === CORES) {
+      pageChunks[i] = pagesToNavigate.slice(start);
+    } else {
+      pageChunks[i] = pagesToNavigate.slice(start, start + chunkSize);
+    }
+
+    start += chunkSize;
+  }
+
+  const workers: Promise<Worker>[] = [];
+  pageChunks.forEach((chunk: string[]) => {
+    const promise: Promise<Worker> = new Promise((resolve, reject) => {
+      const worker: Worker = new Worker(
+        path.resolve(__dirname, 'navigator_worker.js'),
+        {
+          workerData: {
+            yaml_doc: yaml_doc,
+            pagesToNavigate: chunk,
+          },
+        }
+      );
+      worker.on('message', message => {
+        logger.info('Worker message:', message);
+      });
+      worker.on('error', e => {
+        logger.error(`Worker error: ${e}`);
+      });
+      worker.on('exit', code => {
+        if (code !== 0) logger.error(`Worker stopped with exit code ${code}`);
+        reject(new Error(`Worker stopped with exit code ${code}`));
+      });
+    });
+    workers.push(promise);
+  });
+
+  if (isMainThread) {
+    logger.info('Main thread started');
+    await Promise.all(workers);
+  } else {
+    logger.info('Worker thread started');
+  }
 }
 
 main()
