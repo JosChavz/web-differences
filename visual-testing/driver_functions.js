@@ -20,12 +20,13 @@ class Driver {
      * @description - Initializes the webdriver
      */
     async initDriver() {
-			//Headless
-			const options = new chrome.Options();
-			options.addArguments('--headless');
-			options.addArguments('--disable-gpu');
-			options.addArguments('--window-size=1920,1080');
-			options.addArguments('--no-sandbox');
+        //Headless
+        const options = new chrome.Options();
+        options.addArguments('--headless');
+        options.addArguments('--disable-gpu');
+        options.addArguments('--window-size=1920,1080');
+        options.addArguments('--no-sandbox');
+        options.addArguments('--log-level=2');
 
         this.driver = await new webdriver.Builder()
             .forBrowser('chrome')
@@ -53,6 +54,7 @@ class Driver {
      */
     async setCookie(cookies, baseURL) {
         await this.driver.get(baseURL);
+
         for (let cookie of cookies) {
             const tempCookie = new Options.Cookie();
             tempCookie.name = cookie.name;

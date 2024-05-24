@@ -1,12 +1,7 @@
 const {Command} = require('commander');
 const fs = require('fs');
 const path = require('path');
-const chrome = require('selenium-webdriver/chrome');
-const chromedriver = require('chromedriver');
-const webdriver = require('selenium-webdriver');
-const {expect} = require('chai');
 const Driver = require('./driver_functions');
-const jsonfile = require('jsonfile');
 const yaml = require('js-yaml');
 
 const program = new Command();
@@ -104,7 +99,7 @@ let depthVisited = 0;
         const originImagePath = await originDriver.takeScreenshot(originURL, 'origin');
         const destImagePath = await destinationDriver.takeScreenshot(destinationURL, 'dest');
 
-        await originDriver.compareScreenshots(originImagePath, destImagePath, options.temp);
+        await originDriver.compareScreenshots(originImagePath, destImagePath, true);
 
         // Get all links
         const originLinks = await originDriver.getLinks(yaml_doc.blacklistSinglePaths,
