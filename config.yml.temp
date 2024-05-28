@@ -1,0 +1,18 @@
+---
+# Please include the full URL to the site you are testing, including the protocol (http or https)
+# subdomain.domain.com
+origin: 'https://www.example.com/'
+destination: 'https://www.example2.com/'
+cookies:
+  - name: 'cookie_name'
+    value: 'cookie_value'
+blacklistSinglePaths:
+  - '/sitemap.xml/'
+  - '/sitemap/'
+  - '/terms-and-conditions/'
+  - '/wp-login/'
+  - '/cart/'
+blacklistChildrenPaths:
+    - '/store/'
+    - '/wp-content/'
+    - '/events/'
