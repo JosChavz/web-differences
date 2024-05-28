@@ -105,15 +105,19 @@ dist
 # JetBrains IDEs
 .idea/
 
+
 # "Cache" folder
-visual-testing/images
-visual-testing/diff
+old_work/visual-testing/images
+old_work/visual-testing/diff
 diff/
 images/
+old_work/
+cache/
 
 # JSON File
-visual-testing/cookies.json
+config.yml
+old_work/visual-testing/cookies.json
 
-visual-testing/testbed.js
+old_work/visual-testing/testbed.js
 
-visual-testing/config.yml
+old_work/visual-testing/config.yml
