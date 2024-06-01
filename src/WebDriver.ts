@@ -1,5 +1,7 @@
 import winston from 'winston';
 import chrome from 'selenium-webdriver/chrome';
+import firefox from 'selenium-webdriver/firefox';
+import edge from 'selenium-webdriver/edge';
 import webdriver, {
   By,
   ThenableWebDriver,
@@ -10,7 +12,6 @@ import path from 'path';
 import { validateLink } from './utils';
 
 export enum Browser {
-  IE = 'IE',
   EDGE = 'EDGE',
   CHROME = 'CHROME',
   FIREFOX = 'FIREFOX',
@@ -62,13 +63,23 @@ export class WebDriver {
 
     // Options
     const chromeOptions: chrome.Options = new chrome.Options();
+    const firefoxOptions: firefox.Options = new firefox.Options();
+    const edgeOptions: edge.Options = new edge.Options();
 
     switch (browserType) {
-      case Browser.IE:
-        // this.driver = new IEDriver();
-        break;
       case Browser.EDGE:
-        // this.driver = new EdgeDriver();
+        edgeOptions.addArguments('--headless');
+        edgeOptions.addArguments('--window-size=1920,1080');
+        edgeOptions.addArguments('--no-sandbox');
+        edgeOptions.addArguments('--disable-gpu');
+        edgeOptions.addArguments('--disable-extensions');
+        edgeOptions.addArguments('--disable-popup-blocking');
+
+        tempDriver = new webdriver.Builder()
+          .forBrowser(webdriver.Browser.EDGE)
+          .usingServer('http://localhost:4444/')
+          .setEdgeOptions(edgeOptions)
+          .build();
         break;
       case Browser.CHROME:
         chromeOptions.addArguments('--headless');
@@ -80,11 +91,23 @@ export class WebDriver {
 
         tempDriver = new webdriver.Builder()
           .forBrowser(webdriver.Browser.CHROME)
+          .usingServer('http://localhost:4444/')
           .setChromeOptions(chromeOptions)
           .build();
         break;
       case Browser.FIREFOX:
-        // this.driver = new FirefoxDriver();
+        firefoxOptions.addArguments('--headless');
+        firefoxOptions.addArguments('--window-size=1920,1080');
+        firefoxOptions.addArguments('--no-sandbox');
+        firefoxOptions.addArguments('--disable-gpu');
+        firefoxOptions.addArguments('--disable-extensions');
+        firefoxOptions.addArguments('--disable-popup-blocking');
+
+        tempDriver = new webdriver.Builder()
+          .forBrowser(webdriver.Browser.FIREFOX)
+          .usingServer('http://localhost:4444/')
+          .setFirefoxOptions(firefoxOptions)
+          .build();
         break;
       default:
         throw new Error('Unsupported browser type');
