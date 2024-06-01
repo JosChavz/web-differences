@@ -4,13 +4,14 @@ Mainly used for WordPress sites to test after a plugin update. Currently working
 
 ## Installation
 
+Make sure to have Docker installed and running
+
 ```bash
 npm install
 ```
 
 ### Requirements
 - Node.js : v20
-- Chrome Browser: v124
 
 
 ## Getting Started
@@ -77,9 +78,8 @@ As the name implies, the Crawler will crawl through the pages of the website.
 It will be using the *"selenium-webdriver"* library to crawl through. 
 The Crawler will be responsible for finding all the URLs of the website to then pass it into the
 Navigator class.
-
-**NOTE**: This will be very beneficial in the future when there is a caching system in place
-and when multi-threading is implemented.
+However, before passing it to the Navigator class,
+all links that were crawled will be saved into a JSON file inside of `cache`.
 
 ### Auditor.ts
 

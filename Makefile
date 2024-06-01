@@ -17,6 +17,10 @@ chrome:
         --shm-size="2g" \
         -e SE_EVENT_BUS_PUBLISH_PORT=4442 \
         -e SE_EVENT_BUS_SUBSCRIBE_PORT=4443 \
+        -e SE_NODE_OVERRIDE_MAX_SESSIONS=true \
+        -e SE_START_XVFB=false \
+        -e SE_NODE_MAX_SESSIONS=2 \
+        -e SE_ENABLE_BROWSER_LEFTOVERS_CLEANUP=true \
         --name $(CHROME_NAME) \
         selenium/node-chrome:latest || docker start $(CHROME_NAME)
 
@@ -35,6 +39,8 @@ firefox: hub
         -e SE_EVENT_BUS_SUBSCRIBE_PORT=4443 \
         --name $(FIREFOX_NAME) \
         selenium/node-firefox:latest || docker start $(FIREFOX_NAME)
+
+stop: clean
 
 clean:
 	docker stop $(HUB_NAME) $(CHROME_NAME) $(FIREFOX_NAME) $(EDGE_NAME)

@@ -57,6 +57,7 @@ export class Navigator {
     do {
       // The two URLs to compare
       const currentOriginURL: URL = this.queue.shift() as URL;
+
       const currentDestinationURL: URL = new URL(
         currentOriginURL.href.replace(
           this.ORIGIN_BASE_URL,
@@ -108,8 +109,12 @@ export class Navigator {
       );
     } while (this.queue.length > 0);
 
-    await originDriver.close();
-    await destinationDriver.close();
+    try {
+      await originDriver.close();
+      await destinationDriver.close();
+    } catch (e) {
+      this.logger.error(`Error closing the drivers: ${e}`);
+    }
 
     return {
       diffCount: this.diffCount,
