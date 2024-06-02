@@ -160,8 +160,9 @@ async function main(): Promise<void> {
 }
 
 main()
-  .then(() => {
+  .then(res => {
     logger.info('Main function finished');
+    console.log(res);
   })
   .catch(e => {
     logger.error(`Error in the main function: ${e}`);
