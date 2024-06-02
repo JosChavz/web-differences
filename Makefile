@@ -29,6 +29,10 @@ edge: hub
         --shm-size="2g" \
         -e SE_EVENT_BUS_PUBLISH_PORT=4442 \
         -e SE_EVENT_BUS_SUBSCRIBE_PORT=4443 \
+		-e SE_NODE_OVERRIDE_MAX_SESSIONS=true \
+		-e SE_START_XVFB=false \
+		-e SE_NODE_MAX_SESSIONS=2 \
+		-e SE_ENABLE_BROWSER_LEFTOVERS_CLEANUP=true \
         --name $(EDGE_NAME) \
         selenium/node-edge:latest || docker start $(EDGE_NAME)
 
@@ -37,6 +41,10 @@ firefox: hub
         --shm-size="2g" \
         -e SE_EVENT_BUS_PUBLISH_PORT=4442 \
         -e SE_EVENT_BUS_SUBSCRIBE_PORT=4443 \
+		-e SE_NODE_OVERRIDE_MAX_SESSIONS=true \
+		-e SE_START_XVFB=false \
+		-e SE_NODE_MAX_SESSIONS=2 \
+		-e SE_ENABLE_BROWSER_LEFTOVERS_CLEANUP=true \
         --name $(FIREFOX_NAME) \
         selenium/node-firefox:latest || docker start $(FIREFOX_NAME)
 

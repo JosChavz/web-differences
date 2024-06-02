@@ -19,13 +19,27 @@ npm install
 After installing all the required packages,
 please copy the "config.yml.temp" file to "config.yml" in the same directory. 
 Set the origin and destination of the pages.
-Ensure to have the HTTP protocol in the URL, plus the subdomain and domain.
+Ensure to have the HTTP protocol in the URL, plus the subdomain, IF USED, and domain.
 *(e.g. http://subdomain.domain.com)*
 
 
 ## Usage
 
-[TODO: Add the usage of the program]
+After installing all the required packages, run the following command:
+
+```bash
+make all
+```
+
+This will create the necessary Docker containers and network that will be used for the Node.js program.
+
+After that,
+```bash
+npm run build
+npm run start
+```
+
+Given that the `config.yaml` file is set up correctly, the program will start running.
 
 ## Visual Testing
 Visual Testing is a program that iterates through the pages of the ORIGIN websites. 
@@ -36,20 +50,8 @@ and log the differences in the "logs" folder.
 ### How it Works
 The program uses the "pixelmatch" library to compare the screenshots. The program will output the differences in the 
 "diff" folder. During runtime, the program compares both images from the same URL and checks to see if there are any
-differences. The program will output all images in a designated "origin" and "dest" folder. <br>
-In the case that there are differences, the name will reflect the page name and the screenshot. Unfortunately, for
-the time being, full screenshots of a page is not supported. Therefore, the program will only take a screenshot of
-the first visible part of the page and scroll down to the bottom of the page. 
+differences. The program will output all images in a designated "origin" and "dest" folder.
 
-There are a couple of requirements prior running the visual tests. Enter the "visual-testing" folder.
-- Firstly, run `chmod +x imgdiff.sh`
-  - If packages are not installed, then this will install the packages
-- Optionally, if you have any custom cookies to add in, then add them into the "config.yml" file structured as:
-```yaml
-cookie:
-  - name: "pum-298945"
-    value: "true"
-```
 Where each new cookie will be joined by a "-"  <br>
 *As for now, only name and value are accepted. Please use quotation marks at all times. Failure to do so will result in a program **crash**!*
 - Lastly, in the "config.yml" file, change the "origin" and "destination". Please include full URL links.
@@ -105,11 +107,11 @@ The Photographer class is responsible for taking the screenshots of the pages. I
 
 ## Future Implementations
 
-- [ ] Implement a caching system to reduce the time of the program
-- [ ] Implement multi-threading to increase the speed of the program
+- [x] Implement a caching system to reduce the time of the program
+- [x] Implement multi-threading to increase the speed of the program
 - [ ] Implement a full screenshot of the page for different dimensions
 - [ ] Implement a visual report of the differences
-- [ ] Leverage off Docker to run the program with the respected Chrome version
-- [ ] Create different Docker containers for other browsers
+- [x] Leverage off Docker to run the program with the respected Chrome version
+- [x] Create different Docker containers for other browsers
 
 
