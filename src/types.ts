@@ -22,3 +22,8 @@ export interface Config {
   blacklistSinglePaths: string[];
   blacklistChildrenPaths: string[];
 }
+
+export interface ExtraOptions {
+  browser: Browser;
+  deviceWidth: DEVICE_WIDTH;
+}

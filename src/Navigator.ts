@@ -4,7 +4,7 @@ import winston, { Logger } from 'winston';
 import { WebDriver } from './WebDriver';
 import { Photographer } from './Photographer';
 import { Auditor } from './Auditor';
-import { Browser, Config, Cookies, DEVICE_WIDTH } from './types';
+import { Browser, Config, Cookies, DEVICE_WIDTH, ExtraOptions } from './types';
 
 export interface Result {
   diffCount: number;
@@ -27,7 +27,7 @@ export class Navigator {
   constructor(
     configParams: Config,
     pageQueue: URL[] = [],
-    extraConfig?: { browser: Browser; deviceWidth: DEVICE_WIDTH }
+    extraConfig?: ExtraOptions
   ) {
     this.logger = winston.createLogger({
       transports: [
@@ -135,8 +135,8 @@ export class Navigator {
           this.errorURLs.push(currentOriginURL.toString());
         })
         .finally(() => {
-          // fs.remove(originScreenshotPath);
-          // fs.remove(destinationScreenshotPath);
+          fs.remove(originScreenshotPath);
+          fs.remove(destinationScreenshotPath);
         });
 
       this.logger.info(
