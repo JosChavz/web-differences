@@ -1,6 +1,7 @@
 ---
 # Please include the full URL to the site you are testing, including the protocol (http or https)
-# subdomain.domain.com
+# protocol://subdomain.domain.com/ -> some websites drop the `www` subdomain,
+# so please include it if it is part of the URL
 origin: 'https://www.example.com/'
 destination: 'https://www.example2.com/'
 cookies:

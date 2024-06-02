@@ -1,6 +1,6 @@
 {
   "name": "web-differences",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "description": "Mainly used for WordPress sites to test after a plugin update. Currently working by having a dev/staging site and production site.",
   "main": "index.js",
   "scripts": {

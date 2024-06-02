@@ -43,6 +43,27 @@ export class Navigator {
       this.cookies
     );
 
+    await this.navigateQueue(originDriver, destinationDriver);
+
+    try {
+      await originDriver.close();
+      await destinationDriver.close();
+    } catch (e) {
+      this.logger.error(`Error closing the drivers: ${e}`);
+    }
+
+    return {
+      diffCount: this.diffCount,
+      errorURLs: this.errorURLs,
+    };
+  }
+
+  private async navigateQueue(
+    originDriver: WebDriver,
+    destinationDriver: WebDriver
+  ): Promise<void> {
+    const auditor: Auditor = new Auditor();
+
     const originPhotographer: Photographer = new Photographer(
       originDriver,
       'origin'
@@ -52,11 +73,10 @@ export class Navigator {
       'destination'
     );
 
-    const auditor: Auditor = new Auditor();
-
     do {
       // The two URLs to compare
       const currentOriginURL: URL = this.queue.shift() as URL;
+
       const currentDestinationURL: URL = new URL(
         currentOriginURL.href.replace(
           this.ORIGIN_BASE_URL,
@@ -88,7 +108,7 @@ export class Navigator {
       auditor
         .compareImages(originScreenshotPath, destinationScreenshotPath)
         .then(result => {
-          if (result) {
+          if (!result) {
             this.diffCount++;
           }
         })
@@ -107,13 +127,5 @@ export class Navigator {
         `Finished comparing ${currentOriginURL}. Remaining: ${this.queue.length}`
       );
     } while (this.queue.length > 0);
-
-    await originDriver.close();
-    await destinationDriver.close();
-
-    return {
-      diffCount: this.diffCount,
-      errorURLs: this.errorURLs,
-    };
   }
 }

@@ -18,6 +18,8 @@ navigator
       throw new Error('Parent port is not available');
     }
 
+    console.log('Navigator result:', result);
+
     // Send the result back to the main thread
     parentPort.postMessage(result);
   })

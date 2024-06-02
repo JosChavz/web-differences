@@ -33,7 +33,7 @@ let pagesToNavigate: string[] = [];
 const cookies: Cookies[] = [];
 
 // Amount of cores to use
-const CORES: number = 8;
+const CORES: number = 1;
 
 try {
   yaml_doc = yaml.load(fs.readFileSync('config.yml', 'utf8')) as Config;
@@ -138,6 +138,7 @@ async function main(): Promise<void> {
       );
       worker.on('message', message => {
         logger.info('Worker message:', message);
+        resolve(worker);
       });
       worker.on('error', e => {
         logger.error(`Worker error: ${e}`);
@@ -159,8 +160,9 @@ async function main(): Promise<void> {
 }
 
 main()
-  .then(() => {
+  .then(res => {
     logger.info('Main function finished');
+    console.log(res);
   })
   .catch(e => {
     logger.error(`Error in the main function: ${e}`);
