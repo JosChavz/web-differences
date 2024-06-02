@@ -8,7 +8,8 @@ const pagesToNavigate: URL[] = workerData.pagesToNavigate.map(
 
 const navigator: Navigator = new Navigator(
   workerData.yaml_doc,
-  pagesToNavigate
+  pagesToNavigate,
+  workerData.extraConfig
 );
 
 navigator
@@ -17,8 +18,6 @@ navigator
     if (parentPort === null) {
       throw new Error('Parent port is not available');
     }
-
-    console.log('Navigator result:', result);
 
     // Send the result back to the main thread
     parentPort.postMessage(result);
