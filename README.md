@@ -121,6 +121,7 @@ The Photographer class is responsible for taking the screenshots of the pages. I
 - [ ] Implement a visual report of the differences
 - [x] Leverage off Docker to run the program with the respected Chrome version
 - [x] Create different Docker containers for other browsers
+- [ ] Only have one instance that runs the WebDriver, instead of 2
 
 ## Issues
 
@@ -142,3 +143,8 @@ the program will not work.
   For example, if there is an animation on the page, the program will detect it as a difference. 
 Even Google Maps will cause a false-positive.
 
+## FAQs
+
+#### Can I use this on Mac?
+
+Unfortunately, this program is only available for Linux and Windows due to restrictions by Selenium Grid.
