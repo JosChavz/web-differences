@@ -2,11 +2,14 @@ import yaml from 'js-yaml';
 import fs from 'fs-extra';
 import path from 'path';
 import winston from 'winston';
-import { Navigator } from './Navigator';
 import { Crawler } from './Crawler';
 import { validateLink } from './utils';
-import { Cookies } from './WebDriver';
-import { Worker, isMainThread, parentPort, workerData } from 'worker_threads';
+import { Worker, isMainThread } from 'worker_threads';
+import 'dotenv/config';
+import { Browser, Config, Cookies, DEVICE_WIDTH } from './types';
+
+console.log(process.env.DEVICE, process.env.BROWSER, process.env.CORES);
+
 // Initially creates a logger with two transports: Console and File
 const logger = winston.createLogger({
   transports: [
@@ -14,14 +17,6 @@ const logger = winston.createLogger({
     new winston.transports.File({ filename: 'logs/combined.log' }),
   ],
 });
-
-export interface Config {
-  origin: string;
-  destination: string;
-  cookies: Cookies[];
-  blacklistSinglePaths: string[];
-  blacklistChildrenPaths: string[];
-}
 
 // Reads the configuration file
 let yaml_doc: Config;
@@ -32,8 +27,32 @@ let pagesToNavigate: string[] = [];
 // Reads the cookies
 const cookies: Cookies[] = [];
 
-// Amount of cores to use
-const CORES: number = 1;
+// Number of cores to use
+const CORES: number = Number(process.env.CORES) ?? 1;
+const DEVICE = () => {
+  switch (process.env.DEVICE) {
+    case 'desktop':
+      return DEVICE_WIDTH.DESKTOP;
+    case 'tablet':
+      return DEVICE_WIDTH.TABLET;
+    case 'mobile':
+      return DEVICE_WIDTH.MOBILE;
+    default:
+      return DEVICE_WIDTH.DESKTOP;
+  }
+};
+const BROWSER = () => {
+  switch (process.env.BROWSER) {
+    case 'chrome':
+      return Browser.CHROME;
+    case 'firefox':
+      return Browser.FIREFOX;
+    case 'edge':
+      return Browser.EDGE;
+    default:
+      return Browser.CHROME;
+  }
+};
 
 try {
   yaml_doc = yaml.load(fs.readFileSync('config.yml', 'utf8')) as Config;
@@ -109,7 +128,6 @@ async function main(): Promise<void> {
     );
   }
 
-  // TODO: Split the pagesToNavigate array into chunks
   const chunkSize: number = Math.ceil(pagesToNavigate.length / CORES);
   const pageChunks: Array<string[]> = new Array<string[]>(chunkSize);
 
@@ -133,6 +151,10 @@ async function main(): Promise<void> {
           workerData: {
             yaml_doc: yaml_doc,
             pagesToNavigate: chunk,
+            extraConfig: {
+              deviceWidth: DEVICE(),
+              browser: BROWSER(),
+            },
           },
         }
       );
@@ -160,9 +182,8 @@ async function main(): Promise<void> {
 }
 
 main()
-  .then(res => {
+  .then(() => {
     logger.info('Main function finished');
-    console.log(res);
   })
   .catch(e => {
     logger.error(`Error in the main function: ${e}`);

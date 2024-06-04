@@ -1,10 +1,10 @@
-import { Config } from './main';
 import { URL } from 'url';
 import fs from 'fs-extra';
 import winston, { Logger } from 'winston';
-import { Browser, Cookies, WebDriver } from './WebDriver';
+import { WebDriver } from './WebDriver';
 import { Photographer } from './Photographer';
 import { Auditor } from './Auditor';
+import { Browser, Config, Cookies, DEVICE_WIDTH, ExtraOptions } from './types';
 
 export interface Result {
   diffCount: number;
@@ -15,16 +15,20 @@ export class Navigator {
   readonly config: Config;
   readonly ORIGIN_BASE_URL: string;
   readonly DESTINATION_BASE_URL: string;
-  queue: URL[] = [];
   readonly logger: Logger;
   readonly cookies: Cookies[];
+  readonly device: DEVICE_WIDTH;
+  readonly browser: Browser;
+
   diffCount: number = 0;
+  queue: URL[] = [];
   errorURLs: string[] = [];
 
-  constructor(configParams: Config, pageQueue: URL[] = []) {
-    this.config = configParams;
-    this.ORIGIN_BASE_URL = configParams.origin;
-    this.DESTINATION_BASE_URL = configParams.destination;
+  constructor(
+    configParams: Config,
+    pageQueue: URL[] = [],
+    extraConfig?: ExtraOptions
+  ) {
     this.logger = winston.createLogger({
       transports: [
         new winston.transports.Console(),
@@ -32,15 +36,27 @@ export class Navigator {
       ],
     });
 
+    this.config = configParams;
+    this.ORIGIN_BASE_URL = configParams.origin;
+    this.DESTINATION_BASE_URL = configParams.destination;
+    this.browser = extraConfig?.browser ?? Browser.CHROME;
+    this.device = extraConfig?.deviceWidth ?? DEVICE_WIDTH.DESKTOP;
+
     this.queue.push(...pageQueue);
     this.cookies = configParams.cookies;
   }
 
   async run(): Promise<Result> {
-    const originDriver: WebDriver = new WebDriver(Browser.CHROME, this.cookies);
+    // TODO: Can we just have one driver instead of two?
+    const originDriver: WebDriver = new WebDriver(
+      this.browser,
+      this.cookies,
+      this.device
+    );
     const destinationDriver: WebDriver = new WebDriver(
-      Browser.CHROME,
-      this.cookies
+      this.browser,
+      this.cookies,
+      this.device
     );
 
     await this.navigateQueue(originDriver, destinationDriver);

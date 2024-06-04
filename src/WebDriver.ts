@@ -10,32 +10,18 @@ import webdriver, {
 import fs from 'fs-extra';
 import path from 'path';
 import { validateLink } from './utils';
-
-export enum Browser {
-  EDGE = 'EDGE',
-  CHROME = 'CHROME',
-  FIREFOX = 'FIREFOX',
-}
-
-export enum DEVICE_WIDTH {
-  DESKTOP = 1920,
-  TABLET = 768,
-  MOBILE = 375,
-}
-
-export interface Cookies {
-  name: string;
-  value: string;
-}
+import { Browser, Cookies, DEVICE_WIDTH } from './types';
 
 export class WebDriver {
   readonly logger: winston.Logger;
   readonly driver: ThenableWebDriver;
   readonly FILENAME: string = path.basename(__filename);
   readonly cookies: Cookies[];
+  readonly device: DEVICE_WIDTH;
+
   cookiesInitialized: boolean = false;
 
-  constructor(browserType: Browser, cookies: Cookies[]) {
+  constructor(browserType: Browser, cookies: Cookies[], device?: DEVICE_WIDTH) {
     this.logger = winston.createLogger({
       transports: [
         new winston.transports.Console(),
@@ -43,6 +29,7 @@ export class WebDriver {
       ],
     });
     this.cookies = cookies;
+    this.device = device ?? DEVICE_WIDTH.DESKTOP;
 
     const tempDriver = this.initializeWebDriver(browserType);
     if (!tempDriver) {
@@ -66,10 +53,26 @@ export class WebDriver {
     const firefoxOptions: firefox.Options = new firefox.Options();
     const edgeOptions: edge.Options = new edge.Options();
 
+    let deviceSize: string = '1920,1080';
+
+    switch (this.device) {
+      case DEVICE_WIDTH.DESKTOP:
+        deviceSize = '1920,1080';
+        break;
+      case DEVICE_WIDTH.TABLET:
+        deviceSize = '768,1024';
+        break;
+      case DEVICE_WIDTH.MOBILE:
+        deviceSize = '375,667';
+        break;
+      default:
+        deviceSize = '1920,1080';
+    }
+
     switch (browserType) {
       case Browser.EDGE:
         edgeOptions.addArguments('--headless');
-        edgeOptions.addArguments('--window-size=1920,1080');
+        edgeOptions.addArguments('--window-size=' + deviceSize);
         edgeOptions.addArguments('--no-sandbox');
         edgeOptions.addArguments('--disable-gpu');
         edgeOptions.addArguments('--disable-extensions');
@@ -83,7 +86,7 @@ export class WebDriver {
         break;
       case Browser.CHROME:
         chromeOptions.addArguments('--headless');
-        chromeOptions.addArguments('--window-size=1920,1080');
+        chromeOptions.addArguments('--window-size=' + deviceSize);
         chromeOptions.addArguments('--no-sandbox');
         chromeOptions.addArguments('--disable-gpu');
         chromeOptions.addArguments('--disable-extensions');
@@ -97,7 +100,7 @@ export class WebDriver {
         break;
       case Browser.FIREFOX:
         firefoxOptions.addArguments('--headless');
-        firefoxOptions.addArguments('--window-size=1920,1080');
+        firefoxOptions.addArguments('--window-size=' + deviceSize);
         firefoxOptions.addArguments('--no-sandbox');
         firefoxOptions.addArguments('--disable-gpu');
         firefoxOptions.addArguments('--disable-extensions');
@@ -124,7 +127,6 @@ export class WebDriver {
     url: URL,
     options?: {
       fullHeight: boolean;
-      width?: DEVICE_WIDTH;
     }
   ) {
     this.logger.info(`Visiting the URL: ${url.toString()}`);
@@ -145,13 +147,10 @@ export class WebDriver {
         'return document.body.parentNode.scrollHeight'
       );
 
-      await this.driver
-        .manage()
-        .window()
-        .setRect({
-          width: options.width || DEVICE_WIDTH.DESKTOP,
-          height: totalHeight,
-        });
+      await this.driver.manage().window().setRect({
+        width: this.device,
+        height: totalHeight,
+      });
     }
 
     await this.waitForLoad();

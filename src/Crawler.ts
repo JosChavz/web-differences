@@ -1,6 +1,7 @@
 import { URL } from 'url';
 import winston, { Logger } from 'winston';
-import { Browser, Cookies, WebDriver } from './WebDriver';
+import { WebDriver } from './WebDriver';
+import { Browser, Cookies } from './types';
 
 export interface Blacklist {
   singlePaths: string[];

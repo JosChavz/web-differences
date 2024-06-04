@@ -49,7 +49,7 @@ export class Auditor {
       diff.data,
       width,
       newHeight,
-      { threshold: 0.85 }
+      { threshold: 0.95 }
     );
 
     if (numDiffPixels > 0) {

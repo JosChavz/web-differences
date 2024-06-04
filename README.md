@@ -22,6 +22,12 @@ Set the origin and destination of the pages.
 Ensure to have the HTTP protocol in the URL, plus the subdomain, IF USED, and domain.
 *(e.g. http://subdomain.domain.com)*
 
+Please copy the ".env.temp" file to ".env" in the same directory.
+Given that multithreading is supported, please set the number of threads you would like to use in halves.
+
+The reason behind it is due to [Selenium Grid](https://github.com/SeleniumHQ/docker-selenium?tab=readme-ov-file#increasing-session-concurrency-per-container) configuration for concurrency. 
+Sadly, one webdriver will use one CPU core, so it is best to use half of the CPU cores available.
+
 
 ## Usage
 
@@ -50,7 +56,9 @@ and log the differences in the "logs" folder.
 ### How it Works
 The program uses the "pixelmatch" library to compare the screenshots. The program will output the differences in the 
 "diff" folder. During runtime, the program compares both images from the same URL and checks to see if there are any
-differences. The program will output all images in a designated "origin" and "dest" folder.
+differences. The program will output all images in a designated "origin" and "dest" folder temporarily. If there are any differences, the program will output the differences in the "diff" folder.
+
+Please note that small changes such as animations may cause a false-positive.
 
 Where each new cookie will be joined by a "-"  <br>
 *As for now, only name and value are accepted. Please use quotation marks at all times. Failure to do so will result in a program **crash**!*
@@ -58,7 +66,7 @@ Where each new cookie will be joined by a "-"  <br>
 - Any single paths or parent paths (will not include the parent page itself) to be ignored, please add it to the "config.yml" 
 file as, in respect, `blacklistSinglePaths` or `blacklistChildrenPaths`.
 
-***Please follow the syntax of config.yml***
+***Please follow the syntax of config.yml and .env***
 
 ## Logging
 
@@ -113,5 +121,30 @@ The Photographer class is responsible for taking the screenshots of the pages. I
 - [ ] Implement a visual report of the differences
 - [x] Leverage off Docker to run the program with the respected Chrome version
 - [x] Create different Docker containers for other browsers
+- [ ] Only have one instance that runs the WebDriver, instead of 2
 
+## Issues
 
+If there are any issues, please create an issue in the repository.
+
+Here are some that I have seen:
+
+- The program will not work if the ORIGIN website has a different structure.
+
+  For example, if the ORIGIN is `http://subdomain.domain.com` but the actual website is `http://domain.com`, 
+the program will not work.
+
+- If trying to compare a gallery page, the program will not work.
+
+  Mostly due to having so many pages to load.
+
+- There are times when minor differences will cause a false-positive.
+
+  For example, if there is an animation on the page, the program will detect it as a difference. 
+Even Google Maps will cause a false-positive.
+
+## FAQs
+
+#### Can I use this on Mac?
+
+Unfortunately, this program is only available for Linux and Windows due to restrictions by Selenium Grid.
